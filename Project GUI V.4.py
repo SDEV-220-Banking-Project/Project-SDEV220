@@ -43,107 +43,374 @@ class BankApp(tk.Tk):
 
     def create_login_frame(self):
         self.login_frame = tk.Frame(self)
-
-        title = tk.Label(self.login_frame,
-                         text="Welcome to the Credit Union",
-                         font=("Times New Roman", 16))
-        title.pack(pady=10)
-
-        tk.Label(self.login_frame, text="Account Number:").pack()
-        self.entry_login_number = tk.Entry(self.login_frame)
-        self.entry_login_number.pack(pady=5)
-
-        tk.Button(self.login_frame, text="Login", command=self.login).pack(pady=5)
-
-        tk.Label(self.login_frame, text="-----------------------------").pack(pady=10)
-
-        tk.Button(self.login_frame, text="Create New Account",
-                  command=self.show_create_frame).pack(pady=5)
+        
+        # Set dark blue background
+        self.login_frame.configure(bg="#0a1e3d")
+        
+        # Create widgets first
+        self.entry_login_number = tk.Entry(self.login_frame, width=25)
+        self.login_btn = tk.Button(self.login_frame, 
+                             text="Login", 
+                             command=self.login,
+                             bg="#1e4d7b",
+                             fg="white",
+                             width=20)
+        self.create_btn = tk.Button(self.login_frame, 
+                              text="Create New Account",
+                              command=self.show_create_frame,
+                              bg="#1e4d7b",
+                              fg="white",
+                              width=20)
+        
+        # Create canvas for background
+        self.bg_canvas = tk.Canvas(self.login_frame, highlightthickness=0, bd=0, bg="#0a1e3d")
+        self.bg_canvas.pack(fill="both", expand=True)
+        
+        self.bg_canvas.bind('<Configure>', self._on_canvas_configure)
+        
+    def _on_canvas_configure(self, event):
+        if hasattr(self, '_last_canvas_size'):
+            if abs(event.width - self._last_canvas_size[0]) < 5 and abs(event.height - self._last_canvas_size[1]) < 5:
+                return
+        self._last_canvas_size = (event.width, event.height)
+        
+        self.bg_canvas.delete("all")
+        
+        canvas_width = event.width
+        canvas_height = event.height
+        
+        # Try to load background image
+        try:
+            if not hasattr(self, 'bg_photo'):
+                self.bg_photo = tk.PhotoImage(file="CyberBackground.PNG")
+            self.bg_canvas.create_image(canvas_width//2, canvas_height//2, image=self.bg_photo)
+        except Exception as e:
+            pass  # If image fails, just use the blue background
+        
+        center_x = canvas_width // 2
+        
+        logo_y_position = int(canvas_height * 0.15)
+        
+        # Load MMNT logo
+        try:
+            if not hasattr(self, 'logo_photo'):
+                self.logo_photo = tk.PhotoImage(file="MMNTLogo1.png")
+            self.bg_canvas.create_image(center_x, logo_y_position, image=self.logo_photo)
+        except:
+            # If logo fails, show text
+            self.bg_canvas.create_text(center_x, logo_y_position,
+                                 text="MMNT Banking",
+                                 font=("Arial", 24, "bold"),
+                                 fill="white")
+        
+        y_start = int(canvas_height * 0.50)
+        
+        # Welcome text
+        self.bg_canvas.create_text(center_x, y_start,
+                             text="Welcome to the Credit Union",
+                             font=("Times New Roman", 16),
+                             fill="white")
+        y_start += 40
+        
+        # Account Number label
+        self.bg_canvas.create_text(center_x, y_start,
+                             text="Account Number:",
+                             font=("Times New Roman", 12),
+                             fill="white")
+        y_start += 30
+        
+        # Entry widget
+        entry_window = self.bg_canvas.create_window(center_x, y_start, window=self.entry_login_number)
+        self.bg_canvas.tag_raise(entry_window)
+        y_start += 35
+        
+        # Login button
+        login_window = self.bg_canvas.create_window(center_x, y_start, window=self.login_btn)
+        self.bg_canvas.tag_raise(login_window)
+        y_start += 40
+        
+        # Separator
+        self.bg_canvas.create_text(center_x, y_start,
+                             text="-----------------------------",
+                             font=("Times New Roman", 12),
+                             fill="white")
+        y_start += 30
+        
+        # Create New Account button
+        create_window = self.bg_canvas.create_window(center_x, y_start, window=self.create_btn)
+        self.bg_canvas.tag_raise(create_window)
+        
+        self.entry_login_number.lift()
+        self.login_btn.lift()
+        self.create_btn.lift()
 
     def create_create_frame(self):
         self.create_frame = tk.Frame(self)
-
-        title = tk.Label(self.create_frame,
-                         text="Open New Account",
-                         font=("Times New Roman", 16))
-        title.pack(pady=10)
-
-        tk.Label(self.create_frame, text="Account Holder Name:").pack()
-        self.entry_holder_name = tk.Entry(self.create_frame)
-        self.entry_holder_name.pack(pady=5)
-
-        tk.Label(self.create_frame, text="Initial Deposit:").pack()
-        self.entry_initial_deposit = tk.Entry(self.create_frame)
-        self.entry_initial_deposit.pack(pady=5)
-
-        tk.Label(self.create_frame, text="Account Type:").pack(pady=5)
-
+        self.create_frame.configure(bg="#0a1e3d")
+        
+        # Create all widgets first
+        self.entry_holder_name = tk.Entry(self.create_frame, width=25)
+        self.entry_initial_deposit = tk.Entry(self.create_frame, width=25)
+        self.entry_interest = tk.Entry(self.create_frame, width=25)
+        self.entry_overdraft = tk.Entry(self.create_frame, width=25)
+        
         self.account_type_var = tk.StringVar()
         self.account_type_var.set("savings")
-
-        tk.Radiobutton(
+        
+        self.radio_savings = tk.Radiobutton(
             self.create_frame,
             text="Savings Account",
             variable=self.account_type_var,
-            value="savings"
-        ).pack()
-
-        tk.Radiobutton(
+            value="savings",
+            bg="#0a1e3d",
+            fg="white",
+            selectcolor="#1e4d7b"
+        )
+        
+        self.radio_checking = tk.Radiobutton(
             self.create_frame,
             text="Checking Account",
             variable=self.account_type_var,
-            value="checking"
-        ).pack()
-
-        self.label_interest = tk.Label(self.create_frame,
-                                       text="Interest Rate (for Savings):")
-        self.label_interest.pack(pady=5)
-        self.entry_interest = tk.Entry(self.create_frame)
-        self.entry_interest.insert(0, "0.01")
-        self.entry_interest.pack(pady=5)
-
-        self.label_overdraft = tk.Label(self.create_frame,
-                                        text="Overdraft Limit (for Checking):")
-        self.label_overdraft.pack(pady=5)
-        self.entry_overdraft = tk.Entry(self.create_frame)
-        self.entry_overdraft.insert(0, "0.00")
-        self.entry_overdraft.pack(pady=5)
-
-        tk.Button(self.create_frame, text="Create Account",
-                  command=self.create_account).pack(pady=5)
-        tk.Button(self.create_frame, text="Back to Login",
-                  command=self.show_login_frame).pack(pady=5)
+            value="checking",
+            bg="#0a1e3d",
+            fg="white",
+            selectcolor="#1e4d7b"
+        )
+        
+        self.btn_create = tk.Button(self.create_frame, 
+                                     text="Create Account",
+                                     command=self.create_account,
+                                     bg="#1e4d7b",
+                                     fg="white",
+                                     width=20)
+        
+        self.btn_back = tk.Button(self.create_frame, 
+                                  text="Back to Login",
+                                  command=self.show_login_frame,
+                                  bg="#1e4d7b",
+                                  fg="white",
+                                  width=20)
+        
+        # Create canvas for background
+        self.create_canvas = tk.Canvas(self.create_frame, highlightthickness=0, bd=0, bg="#0a1e3d")
+        self.create_canvas.pack(fill="both", expand=True)
+        
+        self.create_canvas.bind('<Configure>', self._on_create_canvas_configure)
+    
+    def _on_create_canvas_configure(self, event):
+        if hasattr(self, '_last_create_canvas_size'):
+            if abs(event.width - self._last_create_canvas_size[0]) < 5 and abs(event.height - self._last_create_canvas_size[1]) < 5:
+                return
+        self._last_create_canvas_size = (event.width, event.height)
+        
+        self.create_canvas.delete("all")
+        
+        canvas_width = event.width
+        canvas_height = event.height
+        
+        # Try to load background image
+        try:
+            if not hasattr(self, 'bg_photo'):
+                self.bg_photo = tk.PhotoImage(file="CyberBackground.PNG")
+            self.create_canvas.create_image(canvas_width//2, canvas_height//2, image=self.bg_photo)
+        except:
+            pass
+        
+        center_x = canvas_width // 2
+        y_start = 30
+        
+        # Title
+        self.create_canvas.create_text(center_x, y_start,
+                                       text="Open New Account",
+                                       font=("Times New Roman", 16),
+                                       fill="white")
+        y_start += 40
+        
+        # Account Holder Name
+        self.create_canvas.create_text(center_x, y_start,
+                                       text="Account Holder Name:",
+                                       font=("Times New Roman", 12),
+                                       fill="white")
+        y_start += 25
+        self.create_canvas.create_window(center_x, y_start, window=self.entry_holder_name)
+        y_start += 30
+        
+        # Initial Deposit
+        self.create_canvas.create_text(center_x, y_start,
+                                       text="Initial Deposit:",
+                                       font=("Times New Roman", 12),
+                                       fill="white")
+        y_start += 25
+        self.create_canvas.create_window(center_x, y_start, window=self.entry_initial_deposit)
+        y_start += 35
+        
+        # Account Type
+        self.create_canvas.create_text(center_x, y_start,
+                                       text="Account Type:",
+                                       font=("Times New Roman", 12),
+                                       fill="white")
+        y_start += 25
+        self.create_canvas.create_window(center_x, y_start, window=self.radio_savings)
+        y_start += 25
+        self.create_canvas.create_window(center_x, y_start, window=self.radio_checking)
+        y_start += 35
+        
+        # Interest Rate
+        self.create_canvas.create_text(center_x, y_start,
+                                       text="Interest Rate (for Savings):",
+                                       font=("Times New Roman", 12),
+                                       fill="white")
+        y_start += 25
+        self.create_canvas.create_window(center_x, y_start, window=self.entry_interest)
+        y_start += 30
+        
+        # Overdraft Limit
+        self.create_canvas.create_text(center_x, y_start,
+                                       text="Overdraft Limit (for Checking):",
+                                       font=("Times New Roman", 12),
+                                       fill="white")
+        y_start += 25
+        self.create_canvas.create_window(center_x, y_start, window=self.entry_overdraft)
+        y_start += 35
+        
+        # Buttons
+        create_win = self.create_canvas.create_window(center_x, y_start, window=self.btn_create)
+        self.create_canvas.tag_raise(create_win)
+        y_start += 35
+        back_win = self.create_canvas.create_window(center_x, y_start, window=self.btn_back)
+        self.create_canvas.tag_raise(back_win)
+        
+        # Lift all widgets to front
+        self.entry_holder_name.lift()
+        self.entry_initial_deposit.lift()
+        self.entry_interest.lift()
+        self.entry_overdraft.lift()
+        self.radio_savings.lift()
+        self.radio_checking.lift()
+        self.btn_create.lift()
+        self.btn_back.lift()
 
     def create_account_frame(self):
         self.account_frame = tk.Frame(self)
-
-        tk.Label(self.account_frame,
-                 text="Your Account",
-                 font=("Times New Roman", 16)).pack(pady=10)
-
-        self.label_acc_number = tk.Label(self.account_frame, text="Account Number: -")
-        self.label_acc_number.pack()
-
-        self.label_acc_holder = tk.Label(self.account_frame, text="Holder: -")
-        self.label_acc_holder.pack()
-
-        self.label_acc_type = tk.Label(self.account_frame, text="Type: -")
-        self.label_acc_type.pack()
-
-        self.label_acc_balance = tk.Label(self.account_frame, text="Balance: $0.00")
-        self.label_acc_balance.pack(pady=5)
-
-        tk.Label(self.account_frame, text="Amount:").pack()
-        self.entry_amount = tk.Entry(self.account_frame)
-        self.entry_amount.pack(pady=5)
-
-        tk.Button(self.account_frame, text="Deposit",
-                  command=self.deposit).pack(pady=3)
-        tk.Button(self.account_frame, text="Withdraw",
-                  command=self.withdraw).pack(pady=3)
-
-        tk.Button(self.account_frame, text="Logout",
-                  command=self.show_login_frame).pack(pady=10)
+        self.account_frame.configure(bg="#0a1e3d")
+        
+        # Create all widgets first
+        self.label_acc_number = tk.Label(self.account_frame, text="Account Number: -",
+                                         fg="white", bg="#0a1e3d", font=("Times New Roman", 12))
+        self.label_acc_holder = tk.Label(self.account_frame, text="Holder: -",
+                                         fg="white", bg="#0a1e3d", font=("Times New Roman", 12))
+        self.label_acc_type = tk.Label(self.account_frame, text="Type: -",
+                                       fg="white", bg="#0a1e3d", font=("Times New Roman", 12))
+        self.label_acc_balance = tk.Label(self.account_frame, text="Balance: $0.00",
+                                          fg="white", bg="#0a1e3d", font=("Times New Roman", 12))
+        
+        self.entry_amount = tk.Entry(self.account_frame, width=25)
+        
+        self.btn_deposit = tk.Button(self.account_frame, text="Deposit",
+                                     command=self.deposit,
+                                     bg="#1e4d7b",
+                                     fg="white",
+                                     width=20)
+        
+        self.btn_withdraw = tk.Button(self.account_frame, text="Withdraw",
+                                      command=self.withdraw,
+                                      bg="#1e4d7b",
+                                      fg="white",
+                                      width=20)
+        
+        self.btn_logout = tk.Button(self.account_frame, text="Logout",
+                                    command=self.show_login_frame,
+                                    bg="#1e4d7b",
+                                    fg="white",
+                                    width=20)
+        
+        # Create canvas for background
+        self.account_canvas = tk.Canvas(self.account_frame, highlightthickness=0, bd=0, bg="#0a1e3d")
+        self.account_canvas.pack(fill="both", expand=True)
+        
+        self.account_canvas.bind('<Configure>', self._on_account_canvas_configure)
+    
+    def _on_account_canvas_configure(self, event):
+        if hasattr(self, '_last_account_canvas_size'):
+            if abs(event.width - self._last_account_canvas_size[0]) < 5 and abs(event.height - self._last_account_canvas_size[1]) < 5:
+                return
+        self._last_account_canvas_size = (event.width, event.height)
+        
+        self.account_canvas.delete("all")
+        
+        canvas_width = event.width
+        canvas_height = event.height
+        
+        # Try to load background image
+        try:
+            if not hasattr(self, 'bg_photo'):
+                self.bg_photo = tk.PhotoImage(file="CyberBackground.PNG")
+            self.account_canvas.create_image(canvas_width//2, canvas_height//2, image=self.bg_photo)
+        except:
+            pass
+        
+        center_x = canvas_width // 2
+        y_start = 30
+        
+        # Title
+        self.account_canvas.create_text(center_x, y_start,
+                                        text="Your Account",
+                                        font=("Times New Roman", 16),
+                                        fill="white")
+        y_start += 40
+        
+        # Account info labels
+        acc_num_win = self.account_canvas.create_window(center_x, y_start, window=self.label_acc_number)
+        self.account_canvas.tag_raise(acc_num_win)
+        y_start += 25
+        
+        holder_win = self.account_canvas.create_window(center_x, y_start, window=self.label_acc_holder)
+        self.account_canvas.tag_raise(holder_win)
+        y_start += 25
+        
+        type_win = self.account_canvas.create_window(center_x, y_start, window=self.label_acc_type)
+        self.account_canvas.tag_raise(type_win)
+        y_start += 25
+        
+        balance_win = self.account_canvas.create_window(center_x, y_start, window=self.label_acc_balance)
+        self.account_canvas.tag_raise(balance_win)
+        y_start += 40
+        
+        # Amount label
+        self.account_canvas.create_text(center_x, y_start,
+                                        text="Amount:",
+                                        font=("Times New Roman", 12),
+                                        fill="white")
+        y_start += 25
+        
+        # Amount entry
+        amount_win = self.account_canvas.create_window(center_x, y_start, window=self.entry_amount)
+        self.account_canvas.tag_raise(amount_win)
+        y_start += 35
+        
+        # Deposit button
+        deposit_win = self.account_canvas.create_window(center_x, y_start, window=self.btn_deposit)
+        self.account_canvas.tag_raise(deposit_win)
+        y_start += 35
+        
+        # Withdraw button
+        withdraw_win = self.account_canvas.create_window(center_x, y_start, window=self.btn_withdraw)
+        self.account_canvas.tag_raise(withdraw_win)
+        y_start += 45
+        
+        # Logout button
+        logout_win = self.account_canvas.create_window(center_x, y_start, window=self.btn_logout)
+        self.account_canvas.tag_raise(logout_win)
+        
+        # Lift all widgets
+        self.label_acc_number.lift()
+        self.label_acc_holder.lift()
+        self.label_acc_type.lift()
+        self.label_acc_balance.lift()
+        self.entry_amount.lift()
+        self.btn_deposit.lift()
+        self.btn_withdraw.lift()
+        self.btn_logout.lift()
 
     # ----------------- Frame switching -----------------
 
