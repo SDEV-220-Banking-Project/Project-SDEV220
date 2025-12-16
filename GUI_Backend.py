@@ -1,11 +1,15 @@
 # bank_backend.py
-
+'''
+This is the backend code for the bank application 
+that uses SQLite for database management. It includes functions for creating
+and managing accounts, applying interest, and updating account information.
+'''
 import sqlite3
 from datetime import date
 import random
 from classes_functions import CreditUnion, SavingsAccount, CheckingAccount, Account
 
-
+# connect to the SQLite database and create tables if they don't exist
 def get_connection(db_path="credit_union.db"):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -29,7 +33,7 @@ def get_connection(db_path="credit_union.db"):
     conn.commit()
     return conn
 
-
+# Initialize the CreditUnion object and load existing accounts from the database
 def init_credit_union(conn):
     cu = CreditUnion()
     cursor = conn.cursor()
@@ -47,9 +51,10 @@ def init_credit_union(conn):
         interest = row[4]
         overdraft = row[5]
 
+         # check account type and set default values if not provided
         if acc_type == "savings":
             if interest is None:
-                interest = 0.01
+                interest = 0.01 # default interst rate for savings account
             cu.open_account(
                 "savings",
                 acc_number,
@@ -72,15 +77,16 @@ def init_credit_union(conn):
 
     return cu
 
-
+# function to create an account in both the database and the CreditUnion object
 def create_account_in_db_and_union(conn, cu, account_type,
                                    holder_name, initial_deposit,
                                    interest_rate=None, overdraft_limit=None):
     cursor = conn.cursor()
-
+                                       
+    # check account type and set default values if not provided
     if account_type == "savings":
         if interest_rate is None:
-            interest_rate = 0.01
+            interest_rate = 0.01 # default interest rate for savings account
         acc_type_str = "savings"
         interest_value = interest_rate
         overdraft_value = 0.0
@@ -94,7 +100,7 @@ def create_account_in_db_and_union(conn, cu, account_type,
         acc_type_str = "basic"
         interest_value = 0.0
         overdraft_value = 0.0
-
+    # insert into database
     cursor.execute(
         "INSERT INTO accounts (account_holder, balance, account_type, "
         "interest_rate, overdraft_limit, last_interest_date) "
@@ -105,6 +111,7 @@ def create_account_in_db_and_union(conn, cu, account_type,
     conn.commit()
     account_number = cursor.lastrowid
 
+    # create account in union
     if account_type == "savings":
         cu.open_account(
             "savings",
@@ -130,7 +137,7 @@ def create_account_in_db_and_union(conn, cu, account_type,
 
     return cu.get_account(account_number)
 
-
+# get account from union, or load it from db and add to union
 def get_or_load_account(conn, cu, account_number):
     acc = cu.get_account(account_number)
     if acc is not None:
@@ -147,8 +154,8 @@ def get_or_load_account(conn, cu, account_number):
     if row is None:
         return None
 
-    num = row[0]
-    holder = row[1]
+    num = row[0] # account number
+    holder = row[1] # holder name
     balance = row[2]
     acc_type = row[3]
     interest = row[4]
@@ -156,7 +163,7 @@ def get_or_load_account(conn, cu, account_number):
 
     if acc_type == "savings":
         if interest is None:
-            interest = 0.01
+            interest = 0.01 #default interest rate
         cu.open_account(
             "savings",
             num,
@@ -179,10 +186,10 @@ def get_or_load_account(conn, cu, account_number):
 
     return cu.get_account(num)
 
-
+# function to update account information in the database
 def update_account_in_db(conn, account):
     cursor = conn.cursor()
-
+    # check account type and set default values if not provided
     if isinstance(account, SavingsAccount):
         acc_type = "savings"
         interest_value = account.interest_rate
@@ -195,7 +202,7 @@ def update_account_in_db(conn, account):
         acc_type = "basic"
         interest_value = 0.0
         overdraft_value = 0.0
-
+    # update database
     cursor.execute(
         "UPDATE accounts SET balance = ?, account_type = ?, "
         "interest_rate = ?, overdraft_limit = ? "
@@ -205,7 +212,7 @@ def update_account_in_db(conn, account):
     )
     conn.commit()
 
-
+# function to apply accrued interest to a savings account
 def apply_accrued_interest(conn, cu, account_number):
     acc = get_or_load_account(conn, cu, account_number)
     if acc is None:
@@ -252,3 +259,4 @@ def apply_accrued_interest(conn, cu, account_number):
         (today_str, account_number)
     )
     conn.commit()
+
