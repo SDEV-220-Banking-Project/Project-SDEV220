@@ -1,11 +1,15 @@
 # bank_gui.py
-
+'''
+This is a Python script that creates a graphical 
+user interface (GUI) for a credit union system 
+using the Tkinter library. 
+'''
 import tkinter as tk
 from tkinter import messagebox
 import tkinter.font as tkFont
 import GUI_Backend as backend
 
-
+# Create a BankApp class that inherits from tk.Tk
 class BankApp(tk.Tk):
     def __init__(self):
         tk.Tk.__init__(self)
@@ -19,8 +23,8 @@ class BankApp(tk.Tk):
         self.option_add("*Entry.Font", default_font)
         self.option_add("*Radiobutton.Font", default_font)
 
-        self.title("Credit Union System")
-        self.geometry("520x400")
+        self.title("Credit Union System") # set the title
+        self.geometry("520x400") # set the size of the window
 
         self.conn = backend.get_connection()
         self.credit_union = backend.init_credit_union(self.conn)
@@ -626,4 +630,5 @@ class BankApp(tk.Tk):
 
 if __name__ == "__main__":
     app = BankApp()
+
     app.mainloop()
